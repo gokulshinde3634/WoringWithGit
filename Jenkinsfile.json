@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+    
+    environment {
+        UIPATH_ORCHESTRATOR_URL = 'https://cloud.uipath.com/infosgxsqwaz'
+        UIPATH_TENANT_NAME = 'DefaultTenant'
+        UIPATH_MACHINE_KEY = 'ad410b44-0b80-4237-9687-a29f193714de'
+        UIPATH_PROCESS_NAME = 'GitTest'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/gokulshinde3634/WoringWithGit.git'
+            }
+        }
+
+        stage('Package UiPath Project') {
+            steps {
+                script {
+                    bat 'UiPath.CommandLine.exe pack --project-path . --output-path .\\output'
+                }
+            }
+        }
+
+        stage('Deploy to UiPath Orchestrator') {
+            steps {
+                script {
+                                     
+                    httpRequest(
+                        url: "${https://cloud.uipath.com/infosgxsqwaz}/odata/Processes",
+                        httpMode: 'POST',
+                        contentType: 'APPLICATION_JSON',
+                        requestBody: """{
+                            "Name": "${GitTest}",
+                            "ProcessVersion": "latest",
+                            "Key": "${ad410b44-0b80-4237-9687-a29f193714de}"
+                        }"""
+                    )
+                }
+            }
+        }
+    }
+}
